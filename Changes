@@ -1,5 +1,8 @@
 Revision history for DBIx-Class-HTMLWidget
 
+0.02    2006-01-25 15:06
+	- Fix checkboxes
+	- Fix foreign keys.
 0.01    2006-01-25 15:06
         First version, released on an unsuspecting world.
 

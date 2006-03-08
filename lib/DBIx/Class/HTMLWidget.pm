@@ -2,7 +2,7 @@ package DBIx::Class::HTMLWidget;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 # pod after __END__
 
 sub fill_widget {
@@ -11,20 +11,29 @@ sub fill_widget {
     foreach my $element ( @{ $widget->{_elements} } ) {
         my $name=$element->name;
         next unless $name && $dbic->can($name) && $element->can('value');
-        $element->value($dbic->$name);
+        if($element->isa('HTML::Widget::Element::Checkbox')) {
+			  $element->checked($dbic->$name?1:0);
+		  } else {
+			  $element->value($dbic->$name);
+		      $element->value( 
+		         ref $dbic->$name ? $dbic->$name->id : $dbic->$name );
+		  }
     }
 }
 
 
 sub populate_from_widget {
-    my ($dbic,$result)=@_;
+   my ($dbic,$result)=@_;
 
-    foreach my $col ( $dbic->result_source->columns ) {
-        $dbic->set_column($col, $result->param($col)) 
-            if defined $result->param($col);
-    }
-    $dbic->insert_or_update;
-    return $dbic;
+	#find all checkboxes
+	my %cb = map {$_->name => undef if $_->isa('HTML::Widget::Element::Checkbox')} @{ $result->{_elements} };
+
+   foreach my $col ( $dbic->result_source->columns ) {
+       $dbic->set_column($col, $result->param($col)||0) 
+           if defined $result->param($col) || exists $cb{$col};
+   }
+   $dbic->insert_or_update;
+   return $dbic;
 }
 
 
@@ -124,6 +133,8 @@ Create or update a DBIx::Class row from a HTML::Widget::Result object
 
 Thomas Klausner, <domm@cpan.org>, http://domm.zsi.at
 Marcus Ramberg, <mramberg@cpan.org>
+Simon Elliott, <cpan@browsing.co.uk> (added support for checkboxes)
+
 
 =head1 LICENSE
 
