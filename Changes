@@ -1,8 +1,15 @@
 Revision history for DBIx-Class-HTMLWidget
 
+0.04    2006-05-09 09:35
+    - Support embedded widgets (thanks andreas)
+    
+0.03    2006-04-13 12:24
+    - Fixed outdated pod synopsis. (thanks dave)
+    - Fixed so empty values doesn't get set to 0. (thanks alex)
+    - Use get_column to avoid inflation instead.
 0.02    2006-01-25 15:06
-	- Fix checkboxes
-	- Fix foreign keys.
+    - Fix checkboxes
+    - Fix foreign keys.
 0.01    2006-01-25 15:06
-        First version, released on an unsuspecting world.
+    - First version, released on an unsuspecting world.
 

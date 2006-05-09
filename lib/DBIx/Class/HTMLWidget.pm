@@ -2,38 +2,48 @@ package DBIx::Class::HTMLWidget;
 use strict;
 use warnings;
 
-our $VERSION = '0.02';
+our $VERSION = '0.04';
 # pod after __END__
 
 sub fill_widget {
     my ($dbic,$widget)=@_;
 
-    foreach my $element ( @{ $widget->{_elements} } ) {
+    my @elements = $widget->get_elements;
+
+    # get embeded widgets
+
+    my @widgets = @{ $widget->{_embedded} };
+
+    foreach my $emb_widget (@widgets) {
+        push @elements, $emb_widget->get_elements;
+    }
+
+    foreach my $element ( @elements ) {
         my $name=$element->name;
         next unless $name && $dbic->can($name) && $element->can('value');
         if($element->isa('HTML::Widget::Element::Checkbox')) {
-			  $element->checked($dbic->$name?1:0);
-		  } else {
-			  $element->value($dbic->$name);
-		      $element->value( 
-		         ref $dbic->$name ? $dbic->$name->id : $dbic->$name );
-		  }
+            $element->checked($dbic->$name?1:0);
+        } else {
+            $element->value($dbic->$name);
+            $element->value( $dbic->get_column($name) );
+        }
     }
 }
 
 
 sub populate_from_widget {
-   my ($dbic,$result)=@_;
+    my ($dbic,$result)=@_;
 
-	#find all checkboxes
-	my %cb = map {$_->name => undef if $_->isa('HTML::Widget::Element::Checkbox')} @{ $result->{_elements} };
+#   find all checkboxes
+    my %cb = map {$_->name => undef if $_->isa('HTML::Widget::Element::Checkbox')} 
+    @{ $result->{_elements} };
 
-   foreach my $col ( $dbic->result_source->columns ) {
-       $dbic->set_column($col, $result->param($col)||0) 
-           if defined $result->param($col) || exists $cb{$col};
-   }
-   $dbic->insert_or_update;
-   return $dbic;
+    foreach my $col ( $dbic->result_source->columns ) {
+    $dbic->set_column($col, scalar($result->param($col)))
+        if defined $result->param($col) || exists $cb{$col};
+    }
+    $dbic->insert_or_update;
+    return $dbic;
 }
 
 
@@ -54,7 +64,8 @@ and Catalyst. If you have no idea what I'm talking about, check the (sparse)
 docs of those modules.
 
    package My::Model::DBIC::Pet;
-   use base 'DBIx::Class::HTMLWidget';
+   use base 'DBIx::Class';
+   __PACKAGE__->load_components(qw/HTMLWidget Core/);
 
    
    package My::Controller::Pet;    # Catalyst-style
@@ -74,7 +85,7 @@ docs of those modules.
      my ($self,$c,$id)=@_;
   
      # get the object
-     my $item=$c->model('DBIC')->table('pet')->find($id);
+     my $item=$c->model('DBIC::Pet')->find($id);
      $c->stash->{item}=$item;
   
      # get the widget
@@ -89,10 +100,10 @@ docs of those modules.
     my ($self,$c,$id)=@_;
     
     # get the object from DB
-    my $item=$c->model('DBIC')->resultset('pet')->find($id);
+    my $item=$c->model('DBIC::Pet')->find($id);
     $c->stash->{item}=$item;
     
-    $ get the widget
+    # get the widget
     my $w=$self->widget_pet($c);
     $w->action($c->uri_for('do_edit/'.$id));
     
