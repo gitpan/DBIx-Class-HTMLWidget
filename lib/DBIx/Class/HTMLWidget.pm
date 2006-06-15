@@ -1,18 +1,20 @@
 package DBIx::Class::HTMLWidget;
 use strict;
 use warnings;
+use Carp;
 
-our $VERSION = '0.04';
+our $VERSION = '0.06';
 # pod after __END__
 
 sub fill_widget {
     my ($dbic,$widget)=@_;
 
+    croak('fill_widget needs a HTML::Widget object as argument') 
+        unless ref $widget && $widget->isa('HTML::Widget');
     my @elements = $widget->get_elements;
 
     # get embeded widgets
-
-    my @widgets = @{ $widget->{_embedded} };
+    my @widgets = @{ $widget->{_embedded} || [] };
 
     foreach my $emb_widget (@widgets) {
         push @elements, $emb_widget->get_elements;
@@ -22,19 +24,21 @@ sub fill_widget {
         my $name=$element->name;
         next unless $name && $dbic->can($name) && $element->can('value');
         if($element->isa('HTML::Widget::Element::Checkbox')) {
-            $element->checked($dbic->$name?1:0);
-        } else {
-            $element->value($dbic->$name);
-            $element->value( $dbic->get_column($name) );
-        }
+			  $element->checked($dbic->$name?1:0);
+		  } else {
+			  $element->value($dbic->$name)
+				unless $element->isa('HTML::Widget::Element::Password');
+		  }
     }
 }
 
 
 sub populate_from_widget {
-    my ($dbic,$result)=@_;
+	my ($dbic,$result)=@_;
+    	croak('populate_from_widget needs a HTML::Widget::Result object as argument') 
+        	unless ref $result && $result->isa('HTML::Widget::Result');
 
-#   find all checkboxes
+	#   find all checkboxes
     my %cb = map {$_->name => undef if $_->isa('HTML::Widget::Element::Checkbox')} 
     @{ $result->{_elements} };
 
@@ -47,8 +51,23 @@ sub populate_from_widget {
 }
 
 
-1;
+sub experimental_populate_from_widget {
+   my ($dbic,$result)=@_;
+    foreach (@{$result->{_elements}} ) {
+            # Its called a fair few times so save name
+            my $name = $_->name;
+			#prevent passwords being overwritten.
+			next if $_->isa('HTML::Widget::Element::Password') && $result->param($name) eq "";
+            $dbic->set_column($name, scalar $result->param($name))
+				if (defined $result->param($name) || $_->isa('HTML::Widget::Element::Checkbox')) &&
+				# Ignore this element if its readonly or not in the DBIC
+				!$_->{attributes}{readonly} && $dbic->has_column($name);
+    }
+   $dbic->insert_or_update;
+   return $dbic;
+}
 
+1;
 __END__
 
 =pod
@@ -139,13 +158,18 @@ Fill the values of a widgets elements with the values of the DBIC object.
    my $item->populate_from_widget($result);
 
 Create or update a DBIx::Class row from a HTML::Widget::Result object
-   
-=head1 AUTHOR
+
+=head1 AUTHORS
 
 Thomas Klausner, <domm@cpan.org>, http://domm.zsi.at
-Marcus Ramberg, <mramberg@cpan.org>
-Simon Elliott, <cpan@browsing.co.uk> (added support for checkboxes)
 
+Marcus Ramberg, <mramberg@cpan.org>
+
+=head1 CONTRIBUTORS
+
+Simon Elliott, <cpan@browsing.co.uk>
+
+Ashley Berlin
 
 =head1 LICENSE
 
