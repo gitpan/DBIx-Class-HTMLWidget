@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Carp;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 # pod after __END__
 
 sub fill_widget {
@@ -11,23 +11,20 @@ sub fill_widget {
 
     croak('fill_widget needs a HTML::Widget object as argument') 
         unless ref $widget && $widget->isa('HTML::Widget');
-    my @elements = $widget->get_elements;
-
-    # get embeded widgets
-    my @widgets = @{ $widget->{_embedded} || [] };
-
-    foreach my $emb_widget (@widgets) {
-        push @elements, $emb_widget->get_elements;
-    }
-
-    foreach my $element ( @elements ) {
+    my @real_elements = $widget->find_elements;
+    
+    foreach my $element ( @real_elements ) {
         my $name=$element->name;
         next unless $name && $dbic->can($name) && $element->can('value');
         if($element->isa('HTML::Widget::Element::Checkbox')) {
 			  $element->checked($dbic->$name?1:0);
 		  } else {
-			  $element->value($dbic->$name)
-				unless $element->isa('HTML::Widget::Element::Password');
+		      if (ref $dbic->$name and $dbic->$name->id) {
+		          $element->value($dbic->$name->id);
+		      } else {
+			      $element->value($dbic->$name)
+				    unless $element->isa('HTML::Widget::Element::Password');
+			  }
 		  }
     }
 }
@@ -39,12 +36,23 @@ sub populate_from_widget {
         	unless ref $result && $result->isa('HTML::Widget::Result');
 
 	#   find all checkboxes
-    my %cb = map {$_->name => undef if $_->isa('HTML::Widget::Element::Checkbox')} 
-    @{ $result->{_elements} };
+    my %cb = map {$_->name => undef } grep { $_->isa('HTML::Widget::Element::Checkbox') } 
+        $result->find_elements;
 
     foreach my $col ( $dbic->result_source->columns ) {
-    $dbic->set_column($col, scalar($result->param($col)))
-        if defined $result->param($col) || exists $cb{$col};
+        my $col_info = $dbic->column_info($col);
+        my $value = scalar($result->param($col));
+        if ($col_info->{data_type} =~ m/^timestamp|date|integer|numeric/i 
+            and defined $value and $value eq '') {
+            $value = undef;
+        }
+
+        if (defined($value) and $value eq 'undef') {
+            $value = undef;
+        }
+        
+        $dbic->set_column($col, $value)
+            if defined $result->param($col) || exists $cb{$col};
     }
     $dbic->insert_or_update;
     return $dbic;
