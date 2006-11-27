@@ -1,4 +1,9 @@
 Revision history for DBIx-Class-HTMLWidget
+0.08    2006-11-26 09:37
+    - Updated deps to make sure we use the latest HTML::Widget, with 
+      multi-level support
+    - Fix for  DBIx::Class::InflateColumn::DateTime and the one-to-many support
+        (Thanks to Guillermo Sansovic)
 	- More HTML-Widget fixes from omega.
 0.07    2006-10-10 14:03
     - Fix for checkboxes again

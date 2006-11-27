@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Carp;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 # pod after __END__
 
 sub fill_widget {
@@ -19,7 +19,7 @@ sub fill_widget {
         if($element->isa('HTML::Widget::Element::Checkbox')) {
 			  $element->checked($dbic->$name?1:0);
 		  } else {
-		      if (ref $dbic->$name and $dbic->$name->id) {
+		      if (ref $dbic->$name and $dbic->$name->can('id') and $dbic->$name->id) {
 		          $element->value($dbic->$name->id);
 		      } else {
 			      $element->value($dbic->$name)
@@ -173,11 +173,15 @@ Thomas Klausner, <domm@cpan.org>, http://domm.zsi.at
 
 Marcus Ramberg, <mramberg@cpan.org>
 
+Andreas Marienborg, <omega@palle.net>
+
 =head1 CONTRIBUTORS
 
 Simon Elliott, <cpan@browsing.co.uk>
 
 Ashley Berlin
+
+Guillermo Sansovic
 
 =head1 LICENSE
 
