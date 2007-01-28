@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Carp;
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 # pod after __END__
 
 sub fill_widget {
@@ -42,17 +42,17 @@ sub populate_from_widget {
     foreach my $col ( $dbic->result_source->columns ) {
         my $col_info = $dbic->column_info($col);
         my $value = scalar($result->param($col));
-        if ($col_info->{data_type} =~ m/^timestamp|date|integer|numeric/i 
+        if ($col_info->{data_type} and $col_info->{data_type} =~ m/^timestamp|date|integer|numeric/i 
             and defined $value and $value eq '') {
             $value = undef;
         }
 
-        if (defined($value) and $value eq 'undef') {
+        if (defined($value) and !ref($value) and $value eq 'undef') {
             $value = undef;
         }
         
-        $dbic->set_column($col, $value)
-            if defined $result->param($col) || exists $cb{$col};
+        $dbic->$col($value)
+            if defined $value || exists $cb{$col};
     }
     $dbic->insert_or_update;
     return $dbic;
