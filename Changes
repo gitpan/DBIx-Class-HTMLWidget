@@ -1,4 +1,11 @@
 Revision history for DBIx-Class-HTMLWidget
+0.11
+    - Backwards incompatible change: If an element has a value when fill_form is run, it
+    will not be overwritten with a new value.
+    
+0.10
+    - Fix problem with undefing values not properly updating on postgres
+    
 0.09
     - Changed from using set_column($col, $value) to $col($value)
         (Thanks to Matt S. Trout for report)

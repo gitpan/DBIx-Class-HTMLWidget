@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use Carp;
 
-our $VERSION = '0.09';
+our $VERSION = '0.11';
 # pod after __END__
 
 sub fill_widget {
@@ -16,6 +16,7 @@ sub fill_widget {
     foreach my $element ( @real_elements ) {
         my $name=$element->name;
         next unless $name && $dbic->can($name) && $element->can('value');
+        next if ($element->value());
         if($element->isa('HTML::Widget::Element::Checkbox')) {
 			  $element->checked($dbic->$name?1:0);
 		  } else {
@@ -45,12 +46,13 @@ sub populate_from_widget {
         if ($col_info->{data_type} and $col_info->{data_type} =~ m/^timestamp|date|integer|numeric/i 
             and defined $value and $value eq '') {
             $value = undef;
+            $dbic->$col(undef);
         }
 
         if (defined($value) and !ref($value) and $value eq 'undef') {
+            $dbic->$col(undef);
             $value = undef;
         }
-        
         $dbic->$col($value)
             if defined $value || exists $cb{$col};
     }
