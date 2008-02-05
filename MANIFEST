@@ -1,0 +1,8 @@
+Changes
+lib/DBIx/Class/HTMLWidget.pm
+MANIFEST
+MANIFEST.skip
+t/01use.t
+t/02pod.t
+t/03podcoverage.t
+META.yml                                 Module meta-data (added by MakeMaker)

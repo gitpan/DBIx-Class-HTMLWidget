@@ -1,0 +1,5 @@
+.*\.tar\.gz$
+blib
+Makefile
+Makefile.old
+MANIFEST.bak
