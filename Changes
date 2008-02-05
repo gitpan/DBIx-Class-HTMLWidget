@@ -1,4 +1,7 @@
 Revision history for DBIx-Class-HTMLWidget
+0.15    2008-02-05
+    - Note to self: COPYFILE_DISABLE=1
+    
 0.14    2008-02-05
     - Missing dep
     

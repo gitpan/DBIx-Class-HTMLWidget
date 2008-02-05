@@ -4,7 +4,7 @@ use warnings;
 use Carp;
 #use Data::Dump qw(dump);
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 # pod after __END__
 
 sub fill_widget {
