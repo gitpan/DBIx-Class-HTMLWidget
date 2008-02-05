@@ -2,9 +2,9 @@ package DBIx::Class::HTMLWidget;
 use strict;
 use warnings;
 use Carp;
-use Data::Dump qw(dump);
+#use Data::Dump qw(dump);
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 # pod after __END__
 
 sub fill_widget {
