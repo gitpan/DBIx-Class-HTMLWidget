@@ -1,5 +1,6 @@
 .*\.tar\.gz$
+.*\.tar$
 blib
-Makefile
+Makefile$
 Makefile.old
 MANIFEST.bak
